@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="hu">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube MP3 letöltő</title>
+  <link rel="stylesheet" href="./output.css">
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"
+    integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO"
+    crossorigin="anonymous"></script>
+  <script src="./js/js-file-downloader.min.js"></script>
+</head>
+
+<body class="h-14 bg-gradient-to-b from-slate-800 to-slate-950 flex flex-col min-h-screen items-stretch">
+  <header class="flex justify-center items-center mt-10">
+    <img src="./img/yt.svg" class="w-28 h-auto drop-shadow-xl" draggable="false">
+    <h3 class="drop-shadow-2xl text-4xl font-semibold text-center text-slate-200 select-none">
+      MP3</h3>
+  </header>
+
+  <form action="/keres" method="POST" class="flex justify-center mt-10">
+    <input name="sessionid" id="sessionid" type="hidden">
+    <input name=" ytlink" id="ytlink"
+      class="rounded-l-lg w-3/5 max-w-md bg-stone-200 fill-transparent pl-3 shadow-xl shadow-slate-300/15 outline-none border-0 focus:ring-2 focus:ring-inset focus:ring-yt-red focus:shadow-red-600/20"
+      type="text" placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
+    <button
+      class="rounded-r-lg bg-yt-red text-slate-200 px-4 py-2 font-semibold shadow-xl shadow-red-600/20">Letöltés</button>
+  </form>
+
+  <% if (thumbnail && title && channel ) { %>
+    <div
+      class="w-4/5 max-w-2xl rounded-l-lg rounded-r-lg flex justify-items-stretch gap-5 mr-auto ml-auto mt-24 bg-slate-950 bg-transparent/35 shadow-2xl">
+      <div class=" min-h-40">
+        <img src="<%= thumbnail %>" class="rounded-l-lg block h-40 w-auto" draggable="false">
+      </div>
+      <div class="text-slate-200 flex-auto mt-2 flex flex-col">
+        <h4 class="text-center text-lg font-semibold mr-5">
+          <%= title %>
+        </h4>
+        <p class="text-right mr-2 mb-2 font-thin text-sm mt-auto">Feltöltő: <%= channel %>
+        </p>
+      </div>
+    </div>
+    <% } %>
+      <footer class=" text-slate-600 mt-auto mb-1 text-center">
+        <p>2024 sry.hu IT Infrastructure, Made by Levi</p>
+      </footer>
+
+      <script>
+        const socket = io();
+        let sessionId = undefined;
+
+        function RandomNum() {
+          return Math.floor(Math.random() * 10000);
+        }
+
+        if (!document.cookie) {
+          document.cookie = `sessionid=${RandomNum()}`;
+          sessionId = document.cookie.split('sessionid=')[1];
+        }
+        else {
+          sessionId = document.cookie.split('sessionid=')[1];
+        }
+
+        const hiddenInput = document.querySelector("#sessionid");
+        hiddenInput.setAttribute("value", sessionId);
+
+        socket.on(sessionId, (link) => {
+          new jsFileDownloader({ url: `../${link}` })
+            .then(function () {
+            })
+            .catch(function (error) {
+              console.log(error);
+            });
+        });
+      </script>
+</body>
+
+</html>
