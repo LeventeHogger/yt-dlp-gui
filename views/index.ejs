@@ -21,7 +21,7 @@
 
   <form action="/keres" method="POST" class="flex justify-center mt-10">
     <input name="sessionid" id="sessionid" type="hidden">
-    <input name=" ytlink" id="ytlink"
+    <input name="ytlink" id="ytlink"
       class="rounded-l-lg w-3/5 max-w-md bg-stone-200 fill-transparent pl-3 shadow-xl shadow-slate-300/15 outline-none border-0 focus:ring-2 focus:ring-inset focus:ring-yt-red focus:shadow-red-600/20"
       type="text" placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
     <button
@@ -30,7 +30,7 @@
 
   <% if (thumbnail && title && channel ) { %>
     <div
-      class="w-4/5 max-w-2xl rounded-l-lg rounded-r-lg flex justify-items-stretch gap-5 mr-auto ml-auto mt-24 bg-slate-950 bg-transparent/35 shadow-2xl">
+      class="relative w-4/5 max-w-2xl rounded-l-lg rounded-r-lg flex justify-items-stretch gap-5 mr-auto ml-auto mt-24 bg-slate-950 bg-transparent/35 shadow-2xl">
       <div class=" min-h-40">
         <img src="<%= thumbnail %>" class="rounded-l-lg block h-40 w-auto" draggable="false">
       </div>
@@ -41,8 +41,12 @@
         <p class="text-right mr-2 mb-2 font-thin text-sm mt-auto">Feltöltő: <%= channel %>
         </p>
       </div>
+      <div id="loading" style="width: 0%"
+        class="bg-green-500 h-2 absolute bottom-0 left-0 right-0 z-10 rounded-bl-lg transition-all ease-out duration-300 shadow-lg shadow-green-300">
+      </div>
     </div>
     <% } %>
+
       <footer class=" text-slate-600 mt-auto mb-1 text-center">
         <p>2024 sry.hu IT Infrastructure, Made by Levi</p>
       </footer>
@@ -63,16 +67,36 @@
           sessionId = document.cookie.split('sessionid=')[1];
         }
 
-        const hiddenInput = document.querySelector("#sessionid");
-        hiddenInput.setAttribute("value", sessionId);
+        const hiddenInput = document.querySelector('#sessionid');
+        const loadingBar = document.querySelector('#loading');
+        hiddenInput.setAttribute('value', sessionId);
 
-        socket.on(sessionId, (link) => {
-          new jsFileDownloader({ url: `../${link}` })
-            .then(function () {
-            })
-            .catch(function (error) {
-              console.log(error);
-            });
+        socket.on(sessionId, (link, progress, type) => {
+          switch (type) {
+            case 'download':
+              loadingBar.style.width = `${(progress.percent) / 3}%`;
+              break;
+            case 'convert':
+              loadingBar.style.width = `${(100 + progress.percent) / 3}%`;
+              break;
+            case 'done':
+              function process(event) {
+                console.log(event);
+                if (!event.lengthComputable) return;
+                let downloadingPercentage = Math.floor(event.loaded / event.total * 100);
+                loadingBar.style.width = `${(200 + (downloadingPercentage)) / 3}%`;
+              };
+
+              new jsFileDownloader({ url: `../${link}`, process: process })
+                .then(function () {
+                  loadingBar.classList.add('rounded-br-lg');
+                  loadingBar.style.width = '100%';
+                })
+                .catch(function (error) {
+                  console.log(error);
+                });
+              break;
+          }
         });
       </script>
 </body>

@@ -1,0 +1,8 @@
+services:
+  yt-dlp-gui:
+    image: yt-dlp-gui
+    network_mode: bridge
+    ports:
+      - 5432:3000
+    restart: unless-stopped
+    build: .
